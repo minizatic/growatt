@@ -1,4 +1,4 @@
-module github.com/skoef/growatt
+module github.com/minizatic/growatt
 
 go 1.19
 
