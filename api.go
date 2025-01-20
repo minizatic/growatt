@@ -51,21 +51,28 @@ func (a API) GetPlantEnergyTimespan(plantID int, date string, timespan int) ([]T
 		switch {
 		case regexp.MustCompile(`^\d+$`).MatchString(date): // year
 			timespan = 3
-			dateFormat = fmt.Sprintf("%s-%%s", date)
-			dateLayout = "2006-01"
 		case regexp.MustCompile(`^\d+-\d+$`).MatchString(date): // month
 			timespan = 2
-			dateFormat = fmt.Sprintf("%s-%%s", date)
-			dateLayout = "2006-01-02"
 		case regexp.MustCompile(`^\d+-\d+-\d+$`).MatchString(date): // day
 			timespan = 1
-			dateLayout = "2006-01-02 15:04"
 		case date == "":
 			timespan = 4
-			dateLayout = "2006"
 		default:
 			return nil, fmt.Errorf("could not parse timespan %s", date)
 		}
+	}
+
+	switch {
+	case timespan == 3:
+		dateFormat = fmt.Sprintf("%s-%%s", date)
+		dateLayout = "2006-01"
+	case timespan == 2:
+		dateFormat = fmt.Sprintf("%s-%%s", date)
+		dateLayout = "2006-01-02"
+	case timespan == 1:
+		dateLayout = "2006-01-02 15:04"
+	case timespan == 4:
+		dateLayout = "2006"
 	}
 
 	val := url.Values{}
