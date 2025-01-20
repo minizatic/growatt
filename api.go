@@ -44,35 +44,28 @@ func NewAPI(username, password string) *API {
 	}
 }
 
-// GetPlantEnergy returns detailed energy information for plant with given PlantID
-// for given period of time
-// Based on the format of the given date, the timespan will be either:
-// - total (empty string, "")
-// - year (eg. "2019")
-// - month (eg. "2019-01")
-// - day (eg. "2019-01-01")
-// any other format will result in error
-func (a API) GetPlantEnergy(plantID int, date string) ([]TimeEnergy, error) {
-	var timespan int
+func (a API) GetPlantEnergyTimespan(plantID int, date string, timespan int) ([]TimeEnergy, error) {
 	var dateLayout string
 	dateFormat := "%s"
-	switch {
-	case regexp.MustCompile(`^\d+$`).MatchString(date): // year
-		timespan = 3
-		dateFormat = fmt.Sprintf("%s-%%s", date)
-		dateLayout = "2006-01"
-	case regexp.MustCompile(`^\d+-\d+$`).MatchString(date): // month
-		timespan = 2
-		dateFormat = fmt.Sprintf("%s-%%s", date)
-		dateLayout = "2006-01-02"
-	case regexp.MustCompile(`^\d+-\d+-\d+$`).MatchString(date): // day
-		timespan = 1
-		dateLayout = "2006-01-02 15:04"
-	case date == "":
-		timespan = 4
-		dateLayout = "2006"
-	default:
-		return nil, fmt.Errorf("could not parse timespan %s", date)
+	if timespan == 0 {
+		switch {
+		case regexp.MustCompile(`^\d+$`).MatchString(date): // year
+			timespan = 3
+			dateFormat = fmt.Sprintf("%s-%%s", date)
+			dateLayout = "2006-01"
+		case regexp.MustCompile(`^\d+-\d+$`).MatchString(date): // month
+			timespan = 2
+			dateFormat = fmt.Sprintf("%s-%%s", date)
+			dateLayout = "2006-01-02"
+		case regexp.MustCompile(`^\d+-\d+-\d+$`).MatchString(date): // day
+			timespan = 1
+			dateLayout = "2006-01-02 15:04"
+		case date == "":
+			timespan = 4
+			dateLayout = "2006"
+		default:
+			return nil, fmt.Errorf("could not parse timespan %s", date)
+		}
 	}
 
 	val := url.Values{}
@@ -127,6 +120,18 @@ func (a API) GetPlantEnergy(plantID int, date string) ([]TimeEnergy, error) {
 	}
 
 	return result, nil
+}
+
+// GetPlantEnergy returns detailed energy information for plant with given PlantID
+// for given period of time
+// Based on the format of the given date, the timespan will be either:
+// - total (empty string, "")
+// - year (eg. "2019")
+// - month (eg. "2019-01")
+// - day (eg. "2019-01-01")
+// any other format will result in error
+func (a API) GetPlantEnergy(plantID int, date string) ([]TimeEnergy, error) {
+	return a.GetPlantEnergyTimespan(plantID, date, 0)
 }
 
 // GetPlantList get's a list of plants from the API
