@@ -16,6 +16,7 @@ import (
 )
 
 const (
+	shinerApiBasePath  = "https://shiner-us.growatt.com"
 	apiBasePath        = "https://openapi-us.growatt.com"
 	apiLoginPath       = "/newTwoLoginAPI.do"
 	apiCookieSessionID = "JSESSIONID"
@@ -312,7 +313,17 @@ func (a *API) call(method, path, data string) ([]byte, error) {
 	switch resp.StatusCode {
 	case 200: // do nothing, this is OK
 	default:
-		return nil, fmt.Errorf("API HTTP error: %s", resp.Status)
+		switch method {
+		case "POST":
+			req.URL.Path = getShinerAPIURL(path, "")
+		case "GET":
+			req.URL.Path = getShinerAPIURL(path, data)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if (err != nil) {
+			return nil, fmt.Errorf("API HTTP error: %s", resp.Status)
+		}
+		defer resp.Body.Close()
 	}
 
 	// read entire response body
@@ -405,6 +416,19 @@ func getAPIURL(path, query string) string {
 	}
 
 	return fmt.Sprintf("%s%s%s%s", apiBasePath, glue, path, query)
+}
+
+func getShinerAPIURL(path, query string) string {
+	glue := ""
+	if !strings.HasPrefix(path, "/") {
+		glue = "/"
+	}
+
+	if query != "" {
+		query = fmt.Sprintf("?%s", query)
+	}
+
+	return fmt.Sprintf("%s%s%s%s", shinerApiBasePath, glue, path, query)
 }
 
 func hashPassword(passwd string) string {
